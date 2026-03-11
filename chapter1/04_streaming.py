@@ -30,6 +30,7 @@ print()  # 줄바꿈
 
 # 스트림 완료 후 최종 메시지 확인
 final_message = stream.get_final_message()
+print("*"*100)
 print(f"\n=== 토큰 사용량 ===")
 print(f"입력: {final_message.usage.input_tokens}, 출력: {final_message.usage.output_tokens}")
 
