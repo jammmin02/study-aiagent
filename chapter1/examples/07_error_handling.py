@@ -17,6 +17,7 @@ from anthropic import (
     RateLimitError,
     APITimeoutError,
     BadRequestError,
+    NotFoundError,
 )
 
 load_dotenv()
@@ -63,12 +64,13 @@ try:
         max_tokens=100,
         messages=[{"role": "user", "content": "안녕"}],
     )
+except NotFoundError as e:
+    # 존재하지 않는 모델명은 404 NotFoundError를 발생시킴
+    print(f"[NotFoundError] 상태 코드: {e.status_code}")
+    print(f"[NotFoundError] 메시지: {e.message}")
 except BadRequestError as e:
     print(f"[BadRequestError] 상태 코드: {e.status_code}")
     print(f"[BadRequestError] 메시지: {e.message}")
-except Exception as e:
-    # BadRequestError가 아닌 다른 에러(예: NotFoundError)가 올 수도 있음
-    print(f"[{type(e).__name__}] 메시지: {e}")
 
 
 # --- 예시 2: 빈 메시지 → BadRequestError ---
@@ -229,24 +231,25 @@ while True:
 # ============================================================
 # 정리: 에러 핸들링 체크리스트
 # ============================================================
-# print()
-# print("=" * 60)
-# print("정리: 에러 핸들링 체크리스트")
-# print("=" * 60)
-# print("""
-# ┌─────────────────────┬──────────┬─────────────────────────┐
-# │ 에러 타입            │ 재시도?  │ 대처법                  │
-# ├─────────────────────┼──────────┼─────────────────────────┤
-# │ AuthenticationError │ ✗        │ API 키 확인             │
-# │ BadRequestError     │ ✗        │ 요청 파라미터 수정       │
-# │ RateLimitError      │ ✓        │ 대기 후 재시도           │
-# │ APITimeoutError     │ ✓        │ 대기 후 재시도           │
-# │ APIError (500, 529) │ ✓        │ 대기 후 재시도           │
-# └─────────────────────┴──────────┴─────────────────────────┘
-#
-# 핵심 원칙:
-# 1. 재시도 가능한 에러와 불가능한 에러를 구분하라
-# 2. Exponential Backoff로 서버 부담을 줄여라
-# 3. 최대 재시도 횟수를 반드시 설정하라 (무한 루프 방지)
-# 4. 실패한 요청은 대화 히스토리에 남기지 마라
-# """)
+print()
+print("=" * 60)
+print("정리: 에러 핸들링 체크리스트")
+print("=" * 60)
+print("""
+┌─────────────────────┬──────────┬─────────────────────────┐
+│ 에러 타입            │ 재시도?  │ 대처법                  │
+├─────────────────────┼──────────┼─────────────────────────┤
+│ AuthenticationError │ ✗        │ API 키 확인             │
+│ BadRequestError     │ ✗        │ 요청 파라미터 수정       │
+│ NotFoundError       │ ✗        │ 모델명 등 리소스 확인    │
+│ RateLimitError      │ ✓        │ 대기 후 재시도           │
+│ APITimeoutError     │ ✓        │ 대기 후 재시도           │
+│ APIError (500, 529) │ ✓        │ 대기 후 재시도           │
+└─────────────────────┴──────────┴─────────────────────────┘
+
+핵심 원칙:
+1. 재시도 가능한 에러와 불가능한 에러를 구분하라
+2. Exponential Backoff로 서버 부담을 줄여라
+3. 최대 재시도 횟수를 반드시 설정하라 (무한 루프 방지)
+4. 실패한 요청은 대화 히스토리에 남기지 마라
+""")

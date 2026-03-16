@@ -15,6 +15,7 @@ load_dotenv()
 # 1. 클라이언트 생성 (ANTHROPIC_API_KEY 환경변수를 자동으로 사용)
 client = Anthropic()
 
+
 # 2. 메시지 전송
 # messages.create()의 주요 파라미터:
 #   - model (필수): 사용할 모델 ID
