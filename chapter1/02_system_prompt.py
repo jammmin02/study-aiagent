@@ -43,3 +43,4 @@ response = client.messages.create(
     messages=[{"role": "user", "content": user_message}],
 )
 print(response.content[0].text)
+
