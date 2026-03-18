@@ -40,6 +40,7 @@ AI Agent와 LLM 사이의 기본적인 통신 방법을 배웁니다.
 | `05_stateless_and_agent.py` | Stateless → Agent | LLM의 무상태 특성, 대화 히스토리 관리, Agent 루프 |
 | `06_message_format.py` | 메시지 포맷 | 요청/응답의 실제 구조, 멀티턴 메시지 흐름 |
 | `07_error_handling.py` | 에러 핸들링 | 에러 타입별 처리, Exponential Backoff 재시도 |
+| `08_structured_output.py` | 구조화된 출력 | JSON 응답 유도, 안전한 파싱, 파싱 실패 시 재시도 |
 
 #### 실습 코드 (`chapter1/practices/`)
 
