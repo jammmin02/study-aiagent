@@ -58,14 +58,18 @@ LLM을 정밀하게 제어하는 기법을 배웁니다. Agent의 "두뇌 설계
 | 파일 | 주제 | 핵심 내용 |
 |------|------|-----------|
 | `01_few_shot.py` | Few-shot Prompting | 예시 기반 패턴 학습, Zero-shot/Few-shot 비교 |
-| `02_chain_of_thought.py` | Chain of Thought | 단계적 추론 유도, CoT + 구조화된 출력 |
+| `02_chain_of_thought.py` | Chain of Thought | 프롬프트 기반 CoT, Extended Thinking (Reasoning Model), Agent 패턴 |
 | `03_prompt_chaining.py` | Prompt Chaining | 작업 분할 및 연쇄, 검증 체인, 변환 체인 |
 | `04_output_control.py` | 출력 제어 | 역할 고정, 제약 조건, 가드레일 |
-| `05_prompt_template.py` | Prompt Template | 변수 치환, 컨텍스트 주입, 도구 선택 템플릿 |
+| `05_prompt_template.py` | Prompt Template | 변수 치환, 컨텍스트 주입, 조건부 템플릿 |
 
 #### 실습 코드 (`chapter2/practices/`)
 
-_준비 중_
+| 폴더 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `p01_code_reviewer/` | AI 코드 리뷰어 | Few-shot + 구조 지정 CoT + 가드레일 |
+| `p02_news_pipeline/` | 뉴스 요약 파이프라인 | Prompt Chaining (4단계) + Prompt Template |
+| `p03_student_counselor/` | 학생 상담 챗봇 | 조건부 템플릿 + 역할 고정 + Extended Thinking + Few-shot |
 
 ### 실행 방법
 

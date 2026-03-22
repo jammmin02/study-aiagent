@@ -108,62 +108,61 @@ print(f"  응답: {result}")
 
 
 # ============================================================
-# 3부: 도구 선택 템플릿 (Agent 핵심 패턴)
+# 3부: 조건부 템플릿 — 상황에 따라 프롬프트 구성 변경
 # ============================================================
-# Agent가 사용 가능한 도구 목록을 동적으로 프롬프트에 삽입하여
-# 상황에 맞는 도구를 선택하게 합니다.
+# 사용자 유형, 상황, 이전 대화 등에 따라 프롬프트를 동적으로 구성합니다.
+# Agent에서는 현재 상태에 따라 System Prompt가 달라지는 경우가 많습니다.
 print()
 print("=" * 60)
-print("3부: 도구 선택 템플릿 (Agent 핵심 패턴)")
+print("3부: 조건부 템플릿")
 print("=" * 60)
 
-# 사용 가능한 도구 정의
-available_tools = [
-    {"name": "search", "description": "웹에서 정보를 검색합니다", "params": "query: 검색어"},
-    {"name": "calculator", "description": "수학 계산을 수행합니다", "params": "expression: 수식"},
-    {"name": "weather", "description": "날씨 정보를 조회합니다", "params": "city: 도시명"},
-]
 
+def customer_support(user_message, user_tier="일반", has_order=False, order_info=None):
+    """사용자 등급과 상태에 따라 프롬프트가 달라지는 고객 지원 템플릿"""
 
-def select_tool(user_request, tools):
-    """사용자 요청에 적합한 도구를 선택하는 템플릿"""
-    # 도구 목록을 텍스트로 변환
-    tools_text = "\n".join(
-        f"- {t['name']}: {t['description']} (파라미터: {t['params']})"
-        for t in tools
-    )
+    # 기본 역할
+    system_parts = ["당신은 고객 지원 챗봇입니다."]
 
-    system_template = f"""사용 가능한 도구:
-{tools_text}
+    # 사용자 등급에 따라 응대 방식 변경
+    if user_tier == "VIP":
+        system_parts.append("이 고객은 VIP입니다. 최우선으로 응대하고, 추가 혜택을 안내하세요.")
+    elif user_tier == "신규":
+        system_parts.append("이 고객은 신규 가입자입니다. 친절하고 상세하게 안내하세요.")
 
-사용자 요청을 분석하고, 적합한 도구를 선택하세요.
-응답 형식 (JSON만 출력):
-{{"tool": "도구명", "params": {{"파라미터명": "값"}}, "reason": "선택 이유"}}
+    # 주문 정보가 있으면 컨텍스트로 주입
+    if has_order and order_info:
+        system_parts.append(f"""
+고객의 주문 정보:
+- 주문번호: {order_info['id']}
+- 상품: {order_info['item']}
+- 상태: {order_info['status']}
+- 주문일: {order_info['date']}""")
 
-적합한 도구가 없으면:
-{{"tool": "none", "params": {{}}, "reason": "이유"}}"""
+    system_parts.append("\n간결하게 응답하세요.")
 
     response = client.messages.create(
         model=MODEL,
         max_tokens=256,
-        system=system_template,
-        messages=[{"role": "user", "content": user_request}],
+        system="\n".join(system_parts),
+        messages=[{"role": "user", "content": user_message}],
     )
     return response.content[0].text
 
 
-# 여러 요청으로 테스트
-test_requests = [
-    "서울 날씨 어때?",
-    "15% 할인하면 85000원짜리 얼마야?",
-    "최신 AI 뉴스 알려줘",
-    "노래 추천해줘",  # 적합한 도구 없음
-]
+# 같은 질문, 다른 상황
+print("\n--- 일반 고객 (주문 정보 없음) ---")
+result = customer_support("주문한 상품이 언제 오나요?", user_tier="일반")
+print(f"  응답: {result}")
 
-for req in test_requests:
-    result = select_tool(req, available_tools)
-    print(f"\n  요청: {req}")
-    print(f"  응답: {result}")
+print("\n--- VIP 고객 (주문 정보 있음) ---")
+result = customer_support(
+    "주문한 상품이 언제 오나요?",
+    user_tier="VIP",
+    has_order=True,
+    order_info={"id": "ORD-2024-1234", "item": "맥북 프로 M4", "status": "배송 중", "date": "2024-12-20"},
+)
+print(f"  응답: {result}")
 
 
 # ============================================================
@@ -180,12 +179,11 @@ print("""
    - 변수가 비어있을 때의 기본값 처리
 
 2. 주요 활용 패턴
-   - 컨텍스트 주입: 검색 결과, DB 조회 결과를 프롬프트에 삽입
-   - 도구 선택: 사용 가능한 도구 목록을 동적으로 구성
-   - 다국어/다목적: 언어, 분석 유형 등을 변수로 전환
+   - 변수 치환: 분석 유형, 언어 등을 파라미터로 전환
+   - 컨텍스트 주입: 검색 결과, DB 조회 결과를 프롬프트에 삽입 (RAG의 기본 원리)
+   - 조건부 구성: 사용자 상태에 따라 프롬프트를 동적으로 조립
 
 3. Agent 개발에서의 위치
    - Agent의 모든 LLM 호출은 사실상 템플릿 기반
-   - Chapter 3 Tool Use: 도구 정의를 프롬프트에 자동 삽입
-   - Chapter 4 ReAct: 관찰 결과를 프롬프트에 주입하여 다음 행동 결정
+   - 현재 상태(대화 히스토리, 도구 결과, 사용자 정보)를 프롬프트에 주입하는 것이 핵심
 """)
