@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 코드 리뷰어 — Chapter 2 실습</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 800px; }
+        h1 { color: #569cd6; margin-bottom: 4px; }
+        .subtitle { color: #888; margin-bottom: 16px; font-size: 14px; }
+        .chat-area { background: #252526; border-radius: 8px; height: 500px; overflow-y: auto; padding: 16px; margin-bottom: 12px; }
+        .message { margin-bottom: 16px; padding: 10px 14px; border-radius: 8px; }
+        .message.user { background: #2d2d30; }
+        .message.assistant { background: #1e3a2f; }
+        .role { font-weight: bold; color: #569cd6; display: block; margin-bottom: 4px; font-size: 12px; }
+        .message.assistant .role { color: #4ec9b0; }
+        .text { white-space: pre-wrap; line-height: 1.6; }
+        .input-area { display: flex; gap: 8px; }
+        textarea { flex: 1; background: #3c3c3c; color: #d4d4d4; border: 1px solid #555; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 14px; resize: vertical; min-height: 80px; }
+        button { background: #0e639c; color: white; border: none; border-radius: 6px; padding: 10px 20px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #1177bb; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        button.reset { background: #c53534; }
+        button.reset:hover { background: #d94745; }
+        .token-info { margin-top: 8px; font-size: 12px; color: #888; }
+        .system-msg { color: #888; font-style: italic; text-align: center; padding: 20px; }
+        .btn-group { display: flex; flex-direction: column; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 코드 리뷰어</h1>
+        <p class="subtitle">Python 코드를 입력하면 [분석] → [문제점] → [개선안] → [점수] 구조로 리뷰합니다</p>
+
+        <div id="chat-area" class="chat-area">
+            <div id="messages"><div class="system-msg">리뷰할 Python 코드를 입력하세요.</div></div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="user-input" placeholder="Python 코드를 붙여넣으세요..."></textarea>
+            <div class="btn-group">
+                <button id="send-btn" onclick="sendMessage()">리뷰</button>
+                <button class="reset" onclick="resetChat()">초기화</button>
+            </div>
+        </div>
+        <div id="token-info" class="token-info"></div>
+    </div>
+
+    <script>
+        const sessionId = crypto.randomUUID();
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            input.value = '';
+            document.getElementById('send-btn').disabled = true;
+
+            const assistantDiv = appendMessage('assistant', '');
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, session_id: sessionId }),
+                });
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const data = JSON.parse(line.slice(6));
+                        if (data.text) {
+                            assistantDiv.querySelector('.text').textContent += data.text;
+                            document.getElementById('chat-area').scrollTop = document.getElementById('chat-area').scrollHeight;
+                        }
+                        if (data.done) {
+                            document.getElementById('token-info').textContent =
+                                `토큰 — 입력: ${data.input_tokens} / 출력: ${data.output_tokens}`;
+                        }
+                    }
+                }
+            } catch (e) {
+                assistantDiv.querySelector('.text').textContent = '[오류] 응답 실패';
+            }
+            document.getElementById('send-btn').disabled = false;
+        }
+
+        function appendMessage(role, text) {
+            const messages = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerHTML = `<span class="role">${role === 'user' ? '코드' : '리뷰'}</span><span class="text">${text}</span>`;
+            messages.appendChild(div);
+            return div;
+        }
+
+        async function resetChat() {
+            await fetch('/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId }),
+            });
+            document.getElementById('messages').innerHTML = '<div class="system-msg">리뷰할 Python 코드를 입력하세요.</div>';
+            document.getElementById('token-info').textContent = '';
+        }
+    </script>
+</body>
+</html>

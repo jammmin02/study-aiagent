@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>뉴스 요약 파이프라인 — Chapter 2 실습</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 800px; }
+        h1 { color: #569cd6; margin-bottom: 4px; }
+        .subtitle { color: #888; margin-bottom: 16px; font-size: 14px; }
+        .options { display: flex; gap: 12px; margin-bottom: 12px; }
+        .options label { font-size: 13px; color: #aaa; }
+        .options select { background: #3c3c3c; color: #d4d4d4; border: 1px solid #555; border-radius: 4px; padding: 4px 8px; font-family: monospace; }
+        textarea { width: 100%; background: #3c3c3c; color: #d4d4d4; border: 1px solid #555; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 14px; resize: vertical; min-height: 120px; margin-bottom: 12px; }
+        button { background: #0e639c; color: white; border: none; border-radius: 6px; padding: 10px 24px; cursor: pointer; font-size: 14px; margin-bottom: 16px; }
+        button:hover { background: #1177bb; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .pipeline { display: flex; flex-direction: column; gap: 12px; }
+        .step { background: #252526; border-radius: 8px; padding: 14px; border-left: 4px solid #555; }
+        .step.running { border-left-color: #dcdcaa; }
+        .step.done { border-left-color: #4ec9b0; }
+        .step-header { font-weight: bold; font-size: 13px; margin-bottom: 6px; }
+        .step.running .step-header { color: #dcdcaa; }
+        .step.done .step-header { color: #4ec9b0; }
+        .step-result { white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
+        .arrow { text-align: center; color: #555; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>뉴스 요약 파이프라인</h1>
+        <p class="subtitle">영문 기사 → 번역 → 요약 → 키워드 → 감성 분석 (4단계 Prompt Chaining)</p>
+
+        <div class="options">
+            <div><label>번역 언어</label><br>
+                <select id="language">
+                    <option value="한국어">한국어</option>
+                    <option value="일본어">일본어</option>
+                    <option value="중국어">중국어</option>
+                </select>
+            </div>
+            <div><label>요약 길이</label><br>
+                <select id="length">
+                    <option value="1문장">1문장</option>
+                    <option value="3문장" selected>3문장</option>
+                    <option value="5문장">5문장</option>
+                </select>
+            </div>
+        </div>
+
+        <textarea id="article" placeholder="영문 기사를 붙여넣으세요...">Artificial intelligence is transforming how we approach software development. Large language models can now write code, review pull requests, and even debug complex systems. However, the key challenge remains: ensuring AI-generated code is reliable, secure, and maintainable in production environments. Companies are investing heavily in AI coding assistants, with some reporting up to 40% productivity gains for routine tasks.</textarea>
+        <br>
+        <button id="run-btn" onclick="runPipeline()">파이프라인 실행</button>
+
+        <div id="pipeline" class="pipeline"></div>
+    </div>
+
+    <script>
+        const stepNames = ['번역', '요약', '키워드 추출', '감성 분석'];
+
+        async function runPipeline() {
+            const article = document.getElementById('article').value.trim();
+            if (!article) return;
+
+            const btn = document.getElementById('run-btn');
+            btn.disabled = true;
+
+            // 파이프라인 UI 초기화
+            const pipeline = document.getElementById('pipeline');
+            pipeline.innerHTML = stepNames.map((name, i) =>
+                `${i > 0 ? '<div class="arrow">↓</div>' : ''}
+                 <div class="step" id="step-${i + 1}">
+                    <div class="step-header">[${i + 1}단계] ${name}</div>
+                    <div class="step-result"></div>
+                 </div>`
+            ).join('');
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        article,
+                        language: document.getElementById('language').value,
+                        length: document.getElementById('length').value,
+                    }),
+                });
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.step && data.status === 'start') {
+                            document.getElementById(`step-${data.step}`).className = 'step running';
+                            document.querySelector(`#step-${data.step} .step-result`).textContent = '처리 중...';
+                        }
+                        if (data.step && data.status === 'done') {
+                            const stepEl = document.getElementById(`step-${data.step}`);
+                            stepEl.className = 'step done';
+                            stepEl.querySelector('.step-result').textContent = data.result;
+                        }
+                    }
+                }
+            } catch (e) {
+                pipeline.innerHTML += '<div style="color:#c53534;margin-top:12px;">[오류] 파이프라인 실행 실패</div>';
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
