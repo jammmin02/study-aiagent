@@ -71,6 +71,24 @@ LLM을 정밀하게 제어하는 기법을 배웁니다. Agent의 "두뇌 설계
 | `p02_news_pipeline/` | 뉴스 요약 파이프라인 | Prompt Chaining (4단계) + Prompt Template |
 | `p03_student_counselor/` | 학생 상담 챗봇 | 조건부 템플릿 + 역할 고정 + Extended Thinking + Few-shot |
 
+### Chapter 3: Tool Use (Function Calling)
+
+LLM이 외부 도구를 호출하여 실제 행동하는 Agent를 만듭니다.
+
+#### 예제 코드 (`chapter3/examples/`)
+
+| 파일 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `01_tool_use_basic.py` | Tool Use 기본 | 도구 정의(JSON Schema), tool_use/tool_result 흐름 |
+| `02_multiple_tools.py` | 다중 도구 | 여러 도구 중 LLM이 상황에 맞게 선택 |
+| `03_tool_use_loop.py` | Agent 루프 | tool_use → tool_result → 반복의 Agent 루프 패턴 |
+| `04_sequential_tools.py` | 순차 도구 호출 | 도구 A 결과를 도구 B 입력으로 체이닝 |
+| `05_tool_error_handling.py` | 에러 처리 | is_error 플래그, 도구 실패 시 Agent 대응 패턴 |
+
+#### 실습 코드 (`chapter3/practices/`)
+
+_준비 중_
+
 ### 실행 방법
 
 ```bash
