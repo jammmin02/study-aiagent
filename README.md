@@ -71,6 +71,47 @@ LLM을 정밀하게 제어하는 기법을 배웁니다. Agent의 "두뇌 설계
 | `p02_news_pipeline/` | 뉴스 요약 파이프라인 | Prompt Chaining (4단계) + Prompt Template |
 | `p03_student_counselor/` | 학생 상담 챗봇 | 조건부 템플릿 + 역할 고정 + Extended Thinking + Few-shot |
 
+### Chapter 3: Tool Use (Function Calling)
+
+LLM이 외부 도구를 호출하여 실제 행동하는 Agent를 만듭니다.
+
+#### 예제 코드 (`chapter3/examples/`)
+
+| 파일 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `00_tool_use_6steps.py` | Tool Use 6단계 | 함수 구현 → Schema 정의 → API 호출 → Routing → Result 주입 → 테스트 |
+| `01_tool_use_basic.py` | Tool Use 기본 | 도구 정의(JSON Schema), tool_use/tool_result 흐름 |
+| `02_multiple_tools.py` | 다중 도구 | 여러 도구 중 LLM이 상황에 맞게 선택 |
+| `03_tool_use_loop.py` | Agent 루프 | tool_use → tool_result → 반복의 Agent 루프 패턴 |
+| `04_sequential_tools.py` | 순차 도구 호출 | 도구 A 결과를 도구 B 입력으로 체이닝 |
+| `05_tool_error_handling.py` | 에러 처리 | is_error 플래그, 도구 실패 시 Agent 대응 패턴 |
+
+#### 실습 코드 (`chapter3/practices/`)
+
+| 폴더 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `p01_multi_tool_assistant/` | 멀티툴 어시스턴트 | 다중 도구 Agent 루프, 도구 호출 과정 실시간 시각화, 에러 처리 |
+
+### Chapter 4: MCP (Model Context Protocol)
+
+도구를 표준 프로토콜로 분리하여 재사용 가능한 Agent를 만듭니다.
+
+#### 예제 코드 (`chapter4/examples/`)
+
+| 파일 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `01_mcp_concept.py` | MCP 개념 | 프로토콜 구조, Ch3(Tool Use) 대비 장점 비교 |
+| `02_mcp_server.py` | MCP 서버 | `@mcp.tool()` 데코레이터로 도구 노출, JSON Schema 자동 생성 |
+| `03_mcp_client.py` | MCP 클라이언트 | 서버 연결, 도구 목록 자동 조회, `session.call_tool()` |
+| `04_multi_server.py` | 다중 서버 | 여러 MCP 서버 동시 연결, 도구→서버 라우팅 |
+| `05_mcp_chatbot.py` | MCP 대화형 Agent | Agent 루프 + MCP 통합, 대화 히스토리 관리 |
+
+#### 실습 코드 (`chapter4/practices/`)
+
+| 폴더 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `p01_schedule_agent/` | 일정 관리 Agent | MCP 서버(SQLite) + Flask Agent, 자연어로 일정 CRUD |
+
 ### 실행 방법
 
 ```bash
@@ -81,4 +122,4 @@ python chapter1/examples/01_basic_call.py
 
 - **LLM**: Claude API (Anthropic)
 - **언어**: Python 3.13+
-- **주요 라이브러리**: `anthropic`, `flask`, `python-dotenv`
+- **주요 라이브러리**: `anthropic`, `flask`, `mcp`, `python-dotenv`
