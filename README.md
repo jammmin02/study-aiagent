@@ -112,6 +112,21 @@ LLM이 외부 도구를 호출하여 실제 행동하는 Agent를 만듭니다.
 |------|------|-----------|
 | `p01_schedule_agent/` | 일정 관리 Agent | MCP 서버(SQLite) + Flask Agent, 자연어로 일정 CRUD |
 
+### 부록: 비동기(Async) 프로그래밍 기초
+
+MCP 등 네트워크 기반 코드를 이해하기 위한 Python 비동기 프로그래밍 기초입니다.
+
+#### 예제 코드 (`appendix/async_basics/`)
+
+| 파일 | 주제 | 핵심 내용 |
+|------|------|-----------|
+| `01_sync_vs_async.py` | 동기 vs 비동기 | 왜 비동기가 필요한가? 커피 주문 비유, 시간 비교 |
+| `02_async_syntax.py` | 비동기 문법 핵심 | `async def`, `await`, `asyncio.run()` 3가지 키워드 |
+| `03_task_and_future.py` | Task와 Future | `create_task`, Task 상태/결과, 동시 실행의 핵심 |
+| `04_async_patterns.py` | 자주 쓰는 패턴 | `gather`, `TaskGroup`, `async with` |
+| `05_async_exception.py` | 비동기 예외 처리 | 개별 try/except, `return_exceptions`, TaskGroup, 재시도 |
+| `06_async_api_call.py` | 실전 API 호출 | `AsyncAnthropic`으로 Claude API 동시 호출 |
+
 ### 실행 방법
 
 ```bash
