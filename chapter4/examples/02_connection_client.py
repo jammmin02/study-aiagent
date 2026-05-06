@@ -187,8 +187,14 @@ async def main():
     }
 """)
 
-            init_result = await session.initialize()
-            print("  -> initialize 응답 수신")
+            # initialize 호출: 프로토콜 버전과 capabilities를 서버에 전달하고, 서버의 응답을 기다립니다.
+            # jsonrpc 라이브러리가 내부적으로 요청/응답을 관리해줌
+            # intialize 호출 시 일어나는 일련의 과정:
+            # 1) 클라이언트 capabilities 준비 (sampling/elicitation/roots)
+            # 2) initialize 요청 전송 (서버에 클라이언트 capabilities 전달)
+            # 3) 서버는 요청을 받고, 자신의 capabilities와 함께 응답
+            # 4) 클라이언트는 서버 응답을 받고, 서버 capabilities를 확인하여 어떤 기능을 사용할 수 있을지 결정
+            init_result = await session.initialize() 
             dump("서버가 반환한 initialize 결과", init_result)
 
             # ============================================================

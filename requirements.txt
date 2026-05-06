@@ -1,0 +1,5 @@
+anthropic==0.91.0
+python-dotenv==1.2.2
+mcp>=1.0.0
+flask>=3.0.0
+Pillow>=10.0.0

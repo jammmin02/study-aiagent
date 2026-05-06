@@ -75,8 +75,12 @@ async def init_mcp():
         args=[SERVER_PATH],
     )
 
-    read_stream, write_stream = await stdio_client(server_params).__aenter__()
-    session = await ClientSession(read_stream, write_stream).__aenter__()
+    # 컨텍스트 매니저를 변수에 보관해야 GC로 인한 스트림 종료를 막을 수 있음
+    stdio_cm = stdio_client(server_params)
+    read_stream, write_stream = await stdio_cm.__aenter__()
+
+    session_cm = ClientSession(read_stream, write_stream)
+    session = await session_cm.__aenter__()
     await session.initialize()
 
     tools_result = await session.list_tools()
@@ -91,6 +95,8 @@ async def init_mcp():
 
     mcp_state["session"] = session
     mcp_state["tools"] = claude_tools
+    mcp_state["stdio_cm"] = stdio_cm      # GC 방지
+    mcp_state["session_cm"] = session_cm  # GC 방지
     print(f"MCP 서버 연결 완료. 도구 {len(claude_tools)}개: {', '.join(t['name'] for t in claude_tools)}")
 
 
